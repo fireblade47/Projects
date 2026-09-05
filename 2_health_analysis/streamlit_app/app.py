@@ -89,18 +89,55 @@ def load_sample_report() -> str:
 def main() -> None:
     load_dotenv()
     st.set_page_config(page_title="Blood Work Analyzer", page_icon="🩺", layout="wide")
-
-    st.title("🩺 Blood Work Analyzer")
-    st.caption("Extract lab values from a text report and receive a simple, Indian diet-focused summary.")
-    st.warning(
-        "This tool is for education only and is not medical advice. "
-        "Discuss results, symptoms, and treatment decisions with a qualified clinician."
+    st.markdown(
+        """
+        <style>
+        [data-testid="stMainBlockContainer"] {
+            padding-top: 0.85rem;
+            padding-bottom: 2rem;
+        }
+        h1 {
+            background: var(--background-color, #ffffff);
+            font-size: 1.05rem;
+            margin-bottom: 0.1rem;
+            padding: 0.35rem 0;
+            position: sticky;
+            top: 0;
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            z-index: 100;
+        }
+        [data-testid="stCaptionContainer"] {
+            margin-bottom: -0.45rem;
+        }
+        [data-testid="stAlert"] {
+            margin: 0.5rem 0 0.75rem;
+            padding: 0.35rem 0.65rem;
+        }
+        [data-testid="stAlert"] p {
+            font-size: 0.85rem;
+        }
+        [data-testid="stTextArea"] textarea {
+            min-height: 9rem;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
     )
+
+    st.title("🩺 Blood Work : AI-Powered Diet Recommendation")
+    st.caption("Extract lab values from a text report and receive a simple, Indian diet-focused summary.")
+    # st.warning(
+        # "This tool is for education only and is not medical advice. "
+        # "Discuss results, symptoms, and treatment decisions with a qualified clinician."
+    # )
 
     with st.sidebar:
         st.header("Model settings")
         provider = st.selectbox("Provider", ("Groq", "Gemini"))
-        default_model = "qwen/qwen3.8-27b" if provider == "Groq" else "gemini-2.5-flash"
+        default_model = "qwen/qwen3.8-27b" if provider == "Groq" else "gemini-3.5-flash-lite"
         model = st.text_input("Model name", value=default_model)
         st.divider()
         st.caption("Add `GROQ_API_KEY` or `GOOGLE_API_KEY` to a `.env` file in the project root.")
@@ -118,7 +155,7 @@ def main() -> None:
     report = st.text_area(
         "Blood report text",
         value=initial_report,
-        height=310,
+        height=180,
         placeholder="Paste your blood-work report here…",
     )
 
@@ -141,10 +178,12 @@ def main() -> None:
         st.session_state["diet_plan"] = diet_plan
 
     if "extracted_values" in st.session_state:
-        results_tab, summary_tab = st.tabs(["Test results", "Health summary & diet"])
-        with results_tab:
+        results_column, summary_column = st.columns(2, gap="medium")
+        with results_column:
+            # st.subheader("Test results")
             st.markdown(st.session_state["extracted_values"])
-        with summary_tab:
+        with summary_column:
+            st.subheader("Health summary & diet")
             st.markdown(st.session_state["diet_plan"])
 
 
