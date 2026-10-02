@@ -24,6 +24,7 @@ dependencies = [
     "langchain-text-splitters>=1.1.2",
     "pillow>=12.2.0",
     "torchvision>=0.27.0",
+    "requests>=2.31.0",
 ]
 
 [tool.poetry]

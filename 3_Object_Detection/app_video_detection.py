@@ -526,20 +526,20 @@ else:
     st.info("👆 Upload a video to get started")
     
     # Show sample demo
-    if st.button("🎯 Try Demo"):
-        sample_items = ["Apple", "Banana", "Milk", "Bread", "Chips"]
-        sample_df = pd.DataFrame({
-            'Item': sample_items,
-            'First_Detected': [f"{i*0.5:.1f}s" for i in range(len(sample_items))],
-            'Confidence': np.random.uniform(0.7, 0.95, len(sample_items)),
-            'Confidence_Level': ['High'] * len(sample_items),
-            'Category': [categorize_item(i) for i in sample_items]
-        })
+    # if st.button("🎯 Try Demo"):
+    #     sample_items = ["Apple", "Banana", "Milk", "Bread", "Chips"]
+    #     sample_df = pd.DataFrame({
+    #         'Item': sample_items,
+    #         'First_Detected': [f"{i*0.5:.1f}s" for i in range(len(sample_items))],
+    #         'Confidence': np.random.uniform(0.7, 0.95, len(sample_items)),
+    #         'Confidence_Level': ['High'] * len(sample_items),
+    #         'Category': [categorize_item(i) for i in sample_items]
+    #     })
         
-        st.success("🎉 Demo Data Generated!")
-        show_shopping_basket_summary(sample_df)
-        show_category_dashboard(sample_df)
-        show_item_heatmap(sample_df)
+    #     st.success("🎉 Demo Data Generated!")
+    #     show_shopping_basket_summary(sample_df)
+    #     show_category_dashboard(sample_df)
+    #     show_item_heatmap(sample_df)
 
 st.divider()
 st.caption("⚡ Built with Groq Vision API | 🔴 Powered by AI · Crafted by Suresh")
