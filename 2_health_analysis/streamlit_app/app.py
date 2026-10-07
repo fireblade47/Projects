@@ -1,10 +1,12 @@
 """Interactive blood-report analysis app based on blood_work_analysis.ipynb."""
 
 import os
+from io import BytesIO
 from pathlib import Path
 
 import streamlit as st
 from dotenv import load_dotenv
+from pypdf import PdfReader
 
 
 APP_DIR = Path(__file__).resolve().parent
@@ -13,7 +15,7 @@ DEFAULT_REPORT_PATH = APP_DIR.parent / "blood_work.txt"
 EXTRACTION_PROMPT = """
 You are a medical data extraction assistant.
 
-From the medical report below, extract every reported test value and classify it as
+From the medical report text below, extract every reported test value and classify it as
 HIGH, LOW, or NORMAL strictly according to the reference range stated in the report.
 If a value cannot be classified from the supplied range, state NOT DETERMINED.
 Do not make up reference ranges or diagnoses.
@@ -23,7 +25,7 @@ Return Markdown only, with this exact structure:
 | Test name | Value | Status | Reference range |
 | --- | --- | --- | --- |
 
-Blood report:
+Extracted blood report text:
 {blood_report}
 """
 
@@ -86,6 +88,19 @@ def load_sample_report() -> str:
         return ""
 
 
+def extract_pdf_text(pdf_bytes: bytes) -> str:
+    """Extract selectable text from a laboratory-report PDF locally."""
+    reader = PdfReader(BytesIO(pdf_bytes))
+    pages = [page.extract_text() or "" for page in reader.pages]
+    text = "\n\n".join(page.strip() for page in pages if page.strip())
+    if not text:
+        raise ValueError(
+            "No selectable text was found in this PDF. Please upload a text-based PDF "
+            "or paste the report text manually."
+        )
+    return text
+
+
 def main() -> None:
     load_dotenv()
     st.set_page_config(page_title="Blood Work Analyzer", page_icon="🩺", layout="wide")
@@ -128,7 +143,7 @@ def main() -> None:
     )
 
     st.title("🩺 Blood Work : AI-Powered Diet Recommendation")
-    st.caption("Extract lab values from a text report and receive a simple, Indian diet-focused summary.")
+    st.caption("Upload a blood-report PDF or text file to extract lab values and receive a simple, Indian diet-focused summary.")
     # st.warning(
         # "This tool is for education only and is not medical advice. "
         # "Discuss results, symptoms, and treatment decisions with a qualified clinician."
@@ -142,18 +157,27 @@ def main() -> None:
         st.divider()
         st.caption("Add `GROQ_API_KEY` or `GOOGLE_API_KEY` to a `.env` file in the project root.")
 
-    upload = st.file_uploader("Upload a plain-text blood report", type=["txt"])
+    upload = st.file_uploader("Upload a blood report", type=["pdf", "txt"])
     if upload is not None:
-        try:
-            initial_report = upload.getvalue().decode("utf-8")
-        except UnicodeDecodeError:
-            st.error("Please upload a UTF-8 encoded .txt report.")
-            initial_report = ""
+        if upload.name.lower().endswith(".pdf"):
+            try:
+                with st.spinner("Extracting text from the PDF…"):
+                    initial_report = extract_pdf_text(upload.getvalue())
+                st.success("PDF text extracted. Review it below before analyzing.")
+            except Exception as error:
+                st.error(f"Could not read the PDF: {error}")
+                initial_report = ""
+        else:
+            try:
+                initial_report = upload.getvalue().decode("utf-8")
+            except UnicodeDecodeError:
+                st.error("Please upload a UTF-8 encoded .txt report.")
+                initial_report = ""
     else:
         initial_report = load_sample_report()
 
     report = st.text_area(
-        "Blood report text",
+        "Extracted blood report text",
         value=initial_report,
         height=180,
         placeholder="Paste your blood-work report here…",
